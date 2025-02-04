@@ -1,53 +1,134 @@
-> Edited for use in IDX on 07/09/12
+import React, { useState, useEffect } from 'react';
+import { View, Button, FlatList, Text } from 'react-native';
+import { saveNotes, loadNotes } from '../utils/storage';
+import NoteCard from '../components/NoteCard';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { IconButton } from 'react-native-paper'; // Usando IconButton da react-native-paper
 
-# Welcome to your Expo app 👋
+// Definindo o tipo de uma Nota
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  starred: boolean;
+  createdAt: string;
+}
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+// Tipando a navegação
+type MainScreenNavigationProp = StackNavigationProp<any, 'CreateNote'>;
 
-## Get started
+interface MainScreenProps {
+  navigation: MainScreenNavigationProp;
+}
 
-#### Android
+const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
+  const [notes, setNotes] = useState<Note[]>([]); // Tipagem do estado de notas
+  const [search, setSearch] = useState('');
+  const [isGridLayout, setIsGridLayout] = useState(true);
 
-Android previews are defined as a `workspace.onStart` hook and started as a vscode task when the workspace is opened/started.
+  useEffect(() => {
+    loadSavedNotes();
+  }, []);
 
-Note, if you can't find the task, either:
-- Rebuild the environment (using command palette: `IDX: Rebuild Environment`), or
-- Run `npm run android -- --tunnel` command manually run android and see the output in your terminal. The device should pick up this new command and switch to start displaying the output from it.
+  const loadSavedNotes = async () => {
+    const savedNotes = await loadNotes();
+    setNotes(savedNotes);
+  };
 
-In the output of this command/task, you'll find options to open the app in a
+  const toggleLayout = () => {
+    setIsGridLayout(prev => !prev); // Alterna entre grid e lista
+  };
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+  const toggleStar = (id: string) => {
+    const updatedNotes = notes.map(note =>
+      note.id === id ? { ...note, starred: !note.starred } : note
+    );
+    setNotes(updatedNotes);  // Atualiza o estado local com as notas modificadas
+    saveNotes(updatedNotes); // Re-salva as notas no AsyncStorage
+  };
 
-You'll also find options to open the app's developer menu, reload the app, and more.
+  const updateNote = (id: string, newTitle: string, newContent: string) => {
+    const updatedNotes = notes.map(note =>
+      note.id === id ? { ...note, title: newTitle, content: newContent } : note
+    );
+    setNotes(updatedNotes);
+    saveNotes(updatedNotes);
+  };
 
-#### Web
+  const deleteNote = (id: string) => {
+    const filteredNotes = notes.filter(note => note.id !== id);
+    setNotes(filteredNotes);
+    saveNotes(filteredNotes);
+  };
 
-Web previews will be started and managred automatically. Use the toolbar to manually refresh.
+  const filteredNotes = notes.filter(note =>
+    note.title.toLowerCase().includes(search.toLowerCase())
+  );
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+  // Filtrando apenas as notas favoritas
+  const favoriteNotes = notes.filter(note => note.starred);
 
-## Get a fresh project
+  return (
+    <View style={{ flex: 1, padding: 10 }}>
 
-When you're ready, run:
+        {/* Cabeçalho com título e botão para alternar layout */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10 }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold' }}>AnotaAi</Text>
+        <Button title="Alterar Layout" onPress={toggleLayout} />
+      </View>
 
-```bash
-npm run reset-project
-```
+           {/* Lista de notas */}
+        <FlatList
+          key={isGridLayout ? 'grid' : 'list'} // Força uma nova renderização ao alterar o layout
+          data={filteredNotes}
+          renderItem={({ item }) => (
+            <NoteCard
+              note={item}
+              onPress={() => navigation.navigate('NoteDetails', { note: item })}
+            />
+          )}
+          keyExtractor={item => item.id}
+          numColumns={isGridLayout ? 2 : 1} // Alterando o número de colunas com base no estado
+        />
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+      {/* Barra inferior com os botões */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10 }}>
+        
+        {/* Ícone de pesquisa */}
+        <Button
+          title="mostrar checkBox"
+          onPress={() => navigation.navigate('Search', { notes, search, setSearch })}
+        />
+        
+        {/* Ícone de pesquisa */}
+        <Button
+          title="Search"
+          onPress={() => navigation.navigate('Search', { notes, search, setSearch })}
+        />
 
-## Learn more
+        {/* Botão "Criar Nota" */}
+        <Button
+          title="+"
+          onPress={() => navigation.navigate('CreateNote', { 
+            onNoteCreated: loadSavedNotes 
+          })}
+        />
 
-To learn more about developing your project with Expo, look at the following resources:
+        {/* Botão "Favoritos" */}
+        <Button
+          title="Favoritos"
+          onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}
+        />
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+        {/* Botão "Trocar a cor das letras" */}
+        <Button
+          title="Trocar cor letras"
+          onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}
+        />
+      </View>
+    </View>
+  );
+};
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+export default MainScreen;

@@ -2,16 +2,22 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const NoteCard = ({ note, onPress, onToggleStar }) => {
+interface NoteCardProps {
+  note: { id: string; title: string; content: string; starred: boolean };
+  onPress: () => void;
+  onFavoriteToggle: () => void; // Função de alternância de favorito
+}
+
+const NoteCard: React.FC<NoteCardProps> = ({ note, onPress, onFavoriteToggle }) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title} numberOfLines={1}>{note.title}</Text>
-        <TouchableOpacity onPress={onToggleStar}>
-          <Icon 
-            name={note.starred ? 'star' : 'star-border'} 
-            size={24} 
-            color={note.starred ? 'gold' : '#666'} 
+        <TouchableOpacity onPress={onFavoriteToggle}>
+          <Icon
+            name={note.starred ? 'star' : 'star-border'}
+            size={24}
+            color={note.starred ? 'gold' : '#666'}
           />
         </TouchableOpacity>
       </View>

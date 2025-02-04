@@ -1,9 +1,21 @@
 import React from 'react';
-import { View, FlatList, Text } from 'react-native';
+import { View, FlatList } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 import NoteCard from '../components/NoteCard';
 
-const FavoritesScreen = ({ route, navigation }) => {
-  const { notes } = route.params;  // As notas favoritas são passadas como parâmetro
+// Definir a tipagem para os parâmetros da rota
+interface FavoritesScreenRouteParams {
+  notes: { id: string; title: string; content: string; starred: boolean }[]; // Defina o tipo das notas
+}
+
+interface FavoritesScreenProps {
+  navigation: StackNavigationProp<any>; // Tipagem para a navegação
+  route: RouteProp<{ params: FavoritesScreenRouteParams }, 'params'>; // Tipagem para a rota
+}
+
+const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ route, navigation }) => {
+  const { notes } = route.params; // Acessa as notas passadas na rota
 
   return (
     <View style={{ flex: 1, padding: 10 }}>

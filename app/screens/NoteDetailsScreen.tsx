@@ -1,8 +1,30 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert } from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 
-const NoteDetailsScreen = ({ route, navigation }) => {
-  const { note, updateNote, deleteNote } = route.params;
+// Definir os tipos de dados para o parâmetro da rota
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  starred: boolean;
+}
+
+interface NoteDetailsRouteParams {
+  note: Note;
+  updateNote: (id: string, title: string, content: string) => void;
+  deleteNote: (id: string) => void;
+  onNoteDeleted: () => void;
+}
+
+interface NoteDetailsScreenProps {
+  navigation: StackNavigationProp<any>; // Tipagem para a navegação
+  route: RouteProp<{ params: NoteDetailsRouteParams }, 'params'>; // Tipagem para a rota
+}
+
+const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation }) => {
+  const { note, updateNote, deleteNote, onNoteDeleted } = route.params;
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
 
@@ -26,7 +48,8 @@ const NoteDetailsScreen = ({ route, navigation }) => {
           onPress: () => {
             console.log('Deletando nota com id:', note.id); // Log para depuração
             deleteNote(note.id); // Chama a função de exclusão corretamente
-            navigation.goBack();
+            onNoteDeleted(); // Função para atualizar a lista de notas na tela principal
+            navigation.goBack(); // Vai de volta para a tela anterior após a exclusão
           }
         }
       ]

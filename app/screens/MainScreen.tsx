@@ -1,10 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, FlatList, Button } from 'react-native';
+import { View, Button, FlatList, TouchableOpacity } from 'react-native';
 import { saveNotes, loadNotes } from '../utils/storage';
 import NoteCard from '../components/NoteCard';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { IconButton } from 'react-native-paper'; // Usando IconButton da react-native-paper
 
-const MainScreen = ({ navigation }) => {
-  const [notes, setNotes] = useState([]);
+// Definindo o tipo de uma Nota
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  starred: boolean;
+  createdAt: string;
+}
+
+// Tipando a navegação
+type MainScreenNavigationProp = StackNavigationProp<any, 'CreateNote'>;
+
+interface MainScreenProps {
+  navigation: MainScreenNavigationProp;
+}
+
+const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
+  const [notes, setNotes] = useState<Note[]>([]); // Tipagem do estado de notas
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -16,15 +35,15 @@ const MainScreen = ({ navigation }) => {
     setNotes(savedNotes);
   };
 
-  const toggleStar = (id) => {
+  const toggleStar = (id: string) => {
     const updatedNotes = notes.map(note =>
       note.id === id ? { ...note, starred: !note.starred } : note
     );
-    setNotes(updatedNotes);
-    saveNotes(updatedNotes);
+    setNotes(updatedNotes);  // Atualiza o estado local com as notas modificadas
+    saveNotes(updatedNotes); // Re-salva as notas no AsyncStorage
   };
 
-  const updateNote = (id, newTitle, newContent) => {
+  const updateNote = (id: string, newTitle: string, newContent: string) => {
     const updatedNotes = notes.map(note =>
       note.id === id ? { ...note, title: newTitle, content: newContent } : note
     );
@@ -32,7 +51,7 @@ const MainScreen = ({ navigation }) => {
     saveNotes(updatedNotes);
   };
 
-  const deleteNote = (id) => {
+  const deleteNote = (id: string) => {
     const filteredNotes = notes.filter(note => note.id !== id);
     setNotes(filteredNotes);
     saveNotes(filteredNotes);
@@ -42,22 +61,11 @@ const MainScreen = ({ navigation }) => {
     note.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Filtrando apenas as notas favoritas
+  const favoriteNotes = notes.filter(note => note.starred);
+
   return (
     <View style={{ flex: 1, padding: 10 }}>
-      <TextInput
-        placeholder="Pesquisar notas"
-        value={search}
-        onChangeText={setSearch}
-        style={{ borderWidth: 1, borderRadius: 5, padding: 10, marginBottom: 10 }}
-      />
-
-      <Button
-        title="Adicionar Nota"
-        onPress={() => navigation.navigate('CreateNote', { 
-          onNoteCreated: loadSavedNotes 
-        })}
-      />
-
       <FlatList
         data={filteredNotes}
         renderItem={({ item }) => (
@@ -66,14 +74,51 @@ const MainScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('NoteDetails', { 
               note: item,
               updateNote,
-              deleteNote // A função deleteNote é passada aqui
+              deleteNote,
+              onNoteDeleted: loadSavedNotes
             })}
-            onToggleStar={() => toggleStar(item.id)}
+            onFavoriteToggle={() => toggleStar(item.id)}  // Passa a função corretamente
           />
         )}
         keyExtractor={item => item.id}
         numColumns={2}
       />
+
+      {/* Barra inferior com os botões */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10 }}>
+        
+        {/* Ícone de pesquisa */}
+        <Button
+          title="mostrar checkBox"
+          onPress={() => navigation.navigate('Search', { notes, search, setSearch })}
+        />
+        
+        {/* Ícone de pesquisa */}
+        <Button
+          title="Search"
+          onPress={() => navigation.navigate('Search', { notes, search, setSearch })}
+        />
+
+        {/* Botão "Criar Nota" */}
+        <Button
+          title="Criar Nota"
+          onPress={() => navigation.navigate('CreateNote', { 
+            onNoteCreated: loadSavedNotes 
+          })}
+        />
+
+        {/* Botão "Favoritos" */}
+        <Button
+          title="Favoritos"
+          onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}
+        />
+
+        {/* Botão "Trocar a cor das letras" */}
+        <Button
+          title="Trocar cor letras"
+          onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}
+        />
+      </View>
     </View>
   );
 };
