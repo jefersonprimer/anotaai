@@ -1,8 +1,7 @@
-// utils/storage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Função para salvar as notas no AsyncStorage
-export const saveNotes = async (notes: Array<any>) => {
+export const saveNotes = async (notes) => {
   try {
     await AsyncStorage.setItem('notes', JSON.stringify(notes));
   } catch (error) {
@@ -11,21 +10,12 @@ export const saveNotes = async (notes: Array<any>) => {
 };
 
 // Função para carregar as notas do AsyncStorage
-export const loadNotes = async (): Promise<Array<any>> => {
+export const loadNotes = async () => {
   try {
     const notes = await AsyncStorage.getItem('notes');
     return notes != null ? JSON.parse(notes) : []; // Retorna as notas ou um array vazio
   } catch (error) {
     console.error('Erro ao carregar as notas:', error);
     return [];
-  }
-};
-
-// Função para excluir as notas
-export const deleteNotes = async () => {
-  try {
-    await AsyncStorage.removeItem('notes');
-  } catch (error) {
-    console.error('Erro ao excluir as notas:', error);
   }
 };

@@ -1,25 +1,31 @@
-// screens/CreateNoteScreen.tsx
 import React, { useState } from 'react';
-import { View, TextInput, Button } from 'react-native';
-import { useNavigation } from '@react-navigation/native';  // Hook de navegação
-import { saveNotes, loadNotes } from '../utils/storage';  // Funções de storage
+import { View, TextInput, Button, Alert } from 'react-native';
+import { saveNotes } from '../utils/storage';
 
-const CreateNoteScreen = () => {
+const CreateNote = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const navigation = useNavigation();  // Navegação para voltar à tela principal
+  const { onNoteCreated } = route.params;
 
-  const handleSaveNote = async () => {
-    if (title.trim() === '' || content.trim() === '') return;
+  const handleCreate = async () => {
+    if (!title.trim() || !content.trim()) {
+      Alert.alert('Erro', 'Preencha todos os campos!');
+      return;
+    }
 
-    const newNote = { id: String(new Date().getTime()), title, content, starred: false };
+    const newNote = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      content: content.trim(),
+      starred: false,
+      createdAt: new Date().toISOString()
+    };
 
-    const savedNotes = await loadNotes();
-    const updatedNotes = [...savedNotes, newNote];
-
+    const existingNotes = await loadNotes();
+    const updatedNotes = [...existingNotes, newNote];
     await saveNotes(updatedNotes);
-
-    navigation.goBack(); // Volta para a tela principal
+    onNoteCreated();
+    navigation.goBack();
   };
 
   return (
@@ -28,30 +34,27 @@ const CreateNoteScreen = () => {
         placeholder="Título"
         value={title}
         onChangeText={setTitle}
-        style={{
-          borderWidth: 1,
-          borderRadius: 5,
-          padding: 10,
-          marginBottom: 10,
-        }}
+        style={{ fontSize: 24, borderBottomWidth: 1, marginBottom: 15, padding: 5 }}
       />
+
       <TextInput
         placeholder="Conteúdo"
         value={content}
         onChangeText={setContent}
-        style={{
-          borderWidth: 1,
-          borderRadius: 5,
-          padding: 10,
-          marginBottom: 20,
-          height: 200,
-        }}
         multiline
+        style={{ 
+          fontSize: 18, 
+          flex: 1, 
+          textAlignVertical: 'top', 
+          padding: 10, 
+          borderWidth: 1, 
+          borderRadius: 5 
+        }}
       />
 
-      <Button title="Salvar Nota" onPress={handleSaveNote} />
+      <Button title="Criar Nota" onPress={handleCreate} />
     </View>
   );
 };
 
-export default CreateNoteScreen;
+export default CreateNote;

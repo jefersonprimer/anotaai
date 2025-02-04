@@ -1,51 +1,76 @@
-// screens/MainScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, Button } from 'react-native';
-import { useNavigation } from '@react-navigation/native';  // Para navegação
-import { saveNotes, loadNotes } from '../utils/storage';  // Importando as funções de storage
+import { View, TextInput, FlatList, Button } from 'react-native';
+import { saveNotes, loadNotes } from '../utils/storage';
+import NoteCard from '../components/NoteCard';
 
-import NoteCard from '../components/NoteCard';  // Componente para exibir cada nota
-
-const MainScreen = () => {
+const MainScreen = ({ navigation }) => {
   const [notes, setNotes] = useState([]);
   const [search, setSearch] = useState('');
-  const navigation = useNavigation();  // Hook de navegação
 
-  // Carregar as notas ao iniciar a tela
   useEffect(() => {
-    const loadSavedNotes = async () => {
-      const savedNotes = await loadNotes();
-      setNotes(savedNotes);
-    };
     loadSavedNotes();
   }, []);
 
-  // Filtrar notas com base na pesquisa
-  const filteredNotes = notes.filter(note => note.title.includes(search) || note.content.includes(search));
+  const loadSavedNotes = async () => {
+    const savedNotes = await loadNotes();
+    setNotes(savedNotes);
+  };
+
+  const toggleStar = (id) => {
+    const updatedNotes = notes.map(note =>
+      note.id === id ? { ...note, starred: !note.starred } : note
+    );
+    setNotes(updatedNotes);
+    saveNotes(updatedNotes);
+  };
+
+  const updateNote = (id, newTitle, newContent) => {
+    const updatedNotes = notes.map(note =>
+      note.id === id ? { ...note, title: newTitle, content: newContent } : note
+    );
+    setNotes(updatedNotes);
+    saveNotes(updatedNotes);
+  };
+
+  const deleteNote = (id) => {
+    const filteredNotes = notes.filter(note => note.id !== id);
+    setNotes(filteredNotes);
+    saveNotes(filteredNotes);
+  };
+
+  const filteredNotes = notes.filter(note =>
+    note.title.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <View style={{ flex: 1, paddingTop: 50, padding: 10 }}>
+    <View style={{ flex: 1, padding: 10 }}>
       <TextInput
         placeholder="Pesquisar notas"
         value={search}
         onChangeText={setSearch}
-        style={{
-          borderWidth: 1,
-          borderRadius: 5,
-          padding: 10,
-          marginBottom: 10,
-        }}
+        style={{ borderWidth: 1, borderRadius: 5, padding: 10, marginBottom: 10 }}
       />
-      
+
       <Button
         title="Adicionar Nota"
-        onPress={() => navigation.navigate('CreateNote')}  // Navega para a tela de criação de nota
+        onPress={() => navigation.navigate('CreateNote', { 
+          onNoteCreated: loadSavedNotes 
+        })}
       />
-      
-      {/* Exibe as notas filtradas */}
+
       <FlatList
         data={filteredNotes}
-        renderItem={({ item }) => <NoteCard note={item} />}
+        renderItem={({ item }) => (
+          <NoteCard
+            note={item}
+            onPress={() => navigation.navigate('NoteDetails', { 
+              note: item,
+              updateNote,
+              deleteNote // A função deleteNote é passada aqui
+            })}
+            onToggleStar={() => toggleStar(item.id)}
+          />
+        )}
         keyExtractor={item => item.id}
         numColumns={2}
       />
