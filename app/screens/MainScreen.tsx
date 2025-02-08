@@ -76,6 +76,24 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   <path fill-rule="evenodd" d="M 11 2 L 11 11 L 2 11 L 2 13 L 11 13 L 11 22 L 13 22 L 13 13 L 22 13 L 22 11 L 13 11 L 13 2 Z"></path>
   </svg>`;
 
+  // Adicione este SVG junto com os outros
+  const starSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+  </svg>`;
+
+    // Adicione este SVG junto com os outros
+    const shapesSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <path d="M4 4h4v4H4V4z"/>
+    <path d="M14 4l4 4l-4 4V4z"/>
+    <path d="M4 14h4v4H4v-4z"/>
+    <circle cx="16" cy="16" r="2"/>
+  </svg>`;
+
+    // Adicione este SVG junto com os outros
+    const halfCircleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10V2z"/>
+  </svg>`;
+
   return (
     <View style={{ flex: 1, padding: 10 }}>
       <FlatList
@@ -99,11 +117,11 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
       {/* Barra inferior com os botões */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10 }}>
         
-        {/* Ícone de pesquisa */}
-        <Button
-          title="mostrar checkBox"
-          onPress={() => navigation.navigate('Search', { notes, search, setSearch })}
-        />
+        {/* Ícone de shapes */}
+        <TouchableOpacity onPress={() => navigation.navigate('Search', { notes, search, setSearch })}>
+          <SvgXml xml={shapesSvg} width={30} height={30} />
+        </TouchableOpacity>
+
         
         {/* Botão "Search" com o ícone SVG */}
         <TouchableOpacity onPress={() => navigation.navigate('Search', { notes, search, setSearch })}>
@@ -116,17 +134,15 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
           <SvgXml xml={plusSvg} width={30} height={30} />
         </TouchableOpacity>
 
-        {/* Botão "Favoritos" */}
-        <Button
-          title="Favoritos"
-          onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}
-        />
+        {/* Substituindo o botão Favoritos por um ícone de estrela */}
+        <TouchableOpacity onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}>
+          <SvgXml xml={starSvg} width={30} height={30} />
+        </TouchableOpacity>
 
-        {/* Botão "Trocar a cor das letras" */}
-        <Button
-          title="Trocar cor letras"
-          onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}
-        />
+         {/* Substituindo o botão "Trocar cor letras" pelo ícone de meio círculo */}
+         <TouchableOpacity onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}>
+          <SvgXml xml={halfCircleSvg} width={30} height={30} />
+        </TouchableOpacity>
       </View>
       
     </View>
