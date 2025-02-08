@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 5,
     padding: 15,
-    backgroundColor: '#fff',
+    backgroundColor: '#171717',
     borderRadius: 10,
     elevation: 2,
   },
@@ -41,6 +41,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   title: {
+    color: "#fff",
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,
