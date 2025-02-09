@@ -7,6 +7,7 @@ import { RouteProp } from '@react-navigation/native';
 import { IconButton } from 'react-native-paper'; // Usando IconButton da react-native-paper
 import { SvgXml } from 'react-native-svg';  // Importando o SvgXml
 import { useTheme } from '../context/ThemeContext';
+import { useFavorites } from '../context/FavoriteContext';
 
 // Definindo o tipo de uma Nota
 export interface Note {
@@ -28,6 +29,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   const [notes, setNotes] = useState<Note[]>([]); // Tipagem do estado de notas
   const [search, setSearch] = useState('');
   const { isDarkMode, toggleTheme } = useTheme();
+  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites(); // Novo hook
   const [isGridLayout, setIsGridLayout] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -41,11 +43,19 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   };
 
   const toggleStar = (id: string) => {
+    // Atualiza o estado global de favoritos
+    if (isFavorite(id)) {
+      removeFavorite(id);
+    } else {
+      addFavorite(id);
+    }
+    
+    // Atualiza a nota local
     const updatedNotes = notes.map(note =>
       note.id === id ? { ...note, starred: !note.starred } : note
     );
-    setNotes(updatedNotes);  // Atualiza o estado local com as notas modificadas
-    saveNotes(updatedNotes); // Re-salva as notas no AsyncStorage
+    setNotes(updatedNotes);
+    saveNotes(updatedNotes);
   };
 
   const updateNote = (id: string, newTitle: string, newContent: string) => {
@@ -66,8 +76,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
     note.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Filtrando apenas as notas favoritas
-  const favoriteNotes = notes.filter(note => note.starred);
+  // Atualize a função que filtra as notas favoritas
+  const favoriteNotes = notes.filter(note => isFavorite(note.id));
 
   // Adicione esta função para alternar o layout
   const toggleLayout = () => {
@@ -177,7 +187,10 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
         data={filteredNotes}
         renderItem={({ item }) => (
           <NoteCard
-            note={item}
+            note={{
+              ...item,
+              starred: isFavorite(item.id) // Use o estado global para determinar se é favorito
+            }}
             onPress={() => navigation.navigate('NoteDetails', { 
               note: item,
               updateNote,

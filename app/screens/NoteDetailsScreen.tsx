@@ -3,7 +3,7 @@ import { View, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-nati
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFavorites } from '../context/FavoriteContext';
 
 // Definir os tipos de dados para o parâmetro da rota
 interface Note {
@@ -31,7 +31,7 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
   const [content, setContent] = useState(note.content);
   const [showDeleteOption, setShowDeleteOption] = useState(false);
   const { isDarkMode } = useTheme();
-  const [isStarred, setIsStarred] = useState(note.starred);
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
 
   const handleSave = () => {
     if (!title.trim() || !content.trim()) {
@@ -63,28 +63,13 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
 
   const toggleStar = async () => {
     try {
-      setIsStarred(!isStarred);
-      
-      const updatedNote = {
-        ...note,
-        starred: !isStarred
-      };
-
-      const notesString = await AsyncStorage.getItem('notes');
-      const notes = notesString ? JSON.parse(notesString) : [];
-      
-      const updatedNotes = notes.map((n: Note) => 
-        n.id === note.id ? updatedNote : n
-      );
-
-      await AsyncStorage.setItem('notes', JSON.stringify(updatedNotes));
-
-      if (route.params.updateNote) {
-        route.params.updateNote(note.id, note.title, note.content, !isStarred);
+      if (isFavorite(note.id)) {
+        await removeFavorite(note.id);
+      } else {
+        await addFavorite(note.id);
       }
     } catch (error) {
       console.error('Erro ao atualizar favorito:', error);
-      setIsStarred(isStarred);
       Alert.alert('Erro', 'Não foi possível atualizar o favorito');
     }
   };
@@ -108,7 +93,7 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
             style={styles.headerButton}
           >
              <View>
-              ⭐
+              {isFavorite(note.id) ? '⭐' : '☆'}
              </View>
           </TouchableOpacity>
 
