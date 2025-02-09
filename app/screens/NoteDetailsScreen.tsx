@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, Alert, StyleSheet, Text } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { useFavorites } from '../context/FavoriteContext';
+import { useCategories } from '../context/CategoryContext';
 
 // Definir os tipos de dados para o parâmetro da rota
 interface Note {
@@ -11,6 +12,7 @@ interface Note {
   title: string;
   content: string;
   starred: boolean;
+  createdAt: Date;
 }
 
 interface NoteDetailsRouteParams {
@@ -32,6 +34,13 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
   const [showDeleteOption, setShowDeleteOption] = useState(false);
   const { isDarkMode } = useTheme();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const { categories } = useCategories();
+
+  const getCategoryName = () => {
+    if (!note.categoryId) return 'Categorias';
+    const category = categories.find(cat => cat.id === note.categoryId);
+    return category?.name || 'Categorias';
+  };
 
   const handleSave = () => {
     if (!title.trim() || !content.trim()) {
@@ -106,6 +115,32 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
               </View>
           </TouchableOpacity>
         </View>
+      </View>
+      
+      {/* Barra de categoria e data */}
+      <View style={[styles.categoryDateBar, { 
+        backgroundColor: isDarkMode ? '#262626' : '#f5f5f5',
+        borderBottomColor: isDarkMode ? '#333' : '#e0e0e0' 
+      }]}>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Categories')}
+          style={styles.categoryButton}
+        >
+          <Text style={[styles.categoryText, { 
+            color: isDarkMode ? '#fff' : '#000',
+            fontStyle: note.categoryId ? 'italic' : 'normal'
+          }]}>
+            {getCategoryName()}
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.dateText, { color: isDarkMode ? '#999' : '#666' }]}>
+          {new Date(note.createdAt || Date.now()).toLocaleDateString('pt-BR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </Text>
       </View>
 
       {/* Conteúdo principal */}
@@ -219,6 +254,25 @@ const styles = StyleSheet.create({
   deleteText: {
     fontSize: 16,
     fontWeight: '500',
+  },
+  categoryDateBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  categoryText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  dateText: {
+    fontSize: 14,
   },
 });
 

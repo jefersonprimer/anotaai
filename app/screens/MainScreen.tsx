@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Button, FlatList, TouchableOpacity, Text, StyleSheet, Modal } from 'react-native';
+import { View, Button, FlatList, TouchableOpacity, Text, StyleSheet, Modal, TextInput } from 'react-native';
 import { saveNotes, loadNotes } from '../utils/storage';
 import NoteCard from '../components/NoteCard';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -8,6 +8,9 @@ import { IconButton } from 'react-native-paper'; // Usando IconButton da react-n
 import { SvgXml } from 'react-native-svg';  // Importando o SvgXml
 import { useTheme } from '../context/ThemeContext';
 import { useFavorites } from '../context/FavoriteContext';
+import { useCategories } from '../context/CategoryContext';
+import ColorPalette from '../components/ColorPalette';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Definindo o tipo de uma Nota
 export interface Note {
@@ -32,14 +35,48 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites(); // Novo hook
   const [isGridLayout, setIsGridLayout] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showColorPalette, setShowColorPalette] = useState(false);
+  const [iconColor, setIconColor] = useState('#000000');
+  const [palettePosition, setPalettePosition] = useState({ top: 0, right: 0 });
 
   useEffect(() => {
     loadSavedNotes();
+    loadIconColor();
   }, []);
 
   const loadSavedNotes = async () => {
     const savedNotes = await loadNotes();
     setNotes(savedNotes);
+  };
+
+  const loadIconColor = async () => {
+    try {
+      const savedColor = await AsyncStorage.getItem('iconColor');
+      if (savedColor) {
+        setIconColor(savedColor);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar cor dos ícones:', error);
+    }
+  };
+
+  const handleColorSelect = async (color: string) => {
+    setIconColor(color);
+    try {
+      await AsyncStorage.setItem('iconColor', color);
+    } catch (error) {
+      console.error('Erro ao salvar cor dos ícones:', error);
+    }
+  };
+
+  const handleOpenColorPalette = (event: any) => {
+    // Pegar a posição do botão para posicionar a paleta
+    const { pageY } = event.nativeEvent;
+    setPalettePosition({ 
+      top: pageY + 10, // 10px abaixo do botão
+      right: 20 
+    });
+    setShowColorPalette(true);
   };
 
   const toggleStar = (id: string) => {
@@ -182,6 +219,13 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
       </Modal>
 
+      <ColorPalette
+        visible={showColorPalette}
+        onClose={() => setShowColorPalette(false)}
+        onSelectColor={handleColorSelect}
+        position={palettePosition}
+      />
+
       {/* FlatList existente */}
       <FlatList
         data={filteredNotes}
@@ -231,30 +275,30 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10 }}>
         
         {/* Ícone de shapes */}
-        <TouchableOpacity onPress={() => navigation.navigate('Search', { notes, search, setSearch })}>
-          <SvgXml xml={shapesSvg} width={30} height={30} />
+        <TouchableOpacity onPress={() => navigation.navigate('Categories')}>
+          <SvgXml xml={shapesSvg} width={30} height={30} color={iconColor} />
         </TouchableOpacity>
 
         
         {/* Botão "Search" com o ícone SVG */}
         <TouchableOpacity onPress={() => navigation.navigate('Search', { notes, search, setSearch })}>
-         <SvgXml xml={searchSvg} width={30} height={30} />
+         <SvgXml xml={searchSvg} width={30} height={30} color={iconColor} />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('CreateNote', { 
           onNoteCreated: loadSavedNotes 
         })}>
-          <SvgXml xml={plusSvg} width={30} height={30} />
+          <SvgXml xml={plusSvg} width={30} height={30} color={iconColor} />
         </TouchableOpacity>
 
         {/* Substituindo o botão Favoritos por um ícone de estrela */}
         <TouchableOpacity onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}>
-          <SvgXml xml={starSvg} width={30} height={30} />
+          <SvgXml xml={starSvg} width={30} height={30} color={iconColor} />
         </TouchableOpacity>
 
          {/* Substituindo o botão "Trocar cor letras" pelo ícone de meio círculo */}
          <TouchableOpacity onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}>
-          <SvgXml xml={halfCircleSvg} width={30} height={30} />
+          <SvgXml xml={halfCircleSvg} width={30} height={30} color={iconColor} />
         </TouchableOpacity>
       </View>
       

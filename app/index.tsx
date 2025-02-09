@@ -11,6 +11,8 @@ import { useTheme } from './context/ThemeContext';
 import { FavoritesProvider } from './context/FavoriteContext';
 import { TrashProvider } from './context/TrashContext';
 import TrashScreen from './screens/TrashScreen';
+import { CategoryProvider } from './context/CategoryContext';
+import CategoriesScreen from './screens/CategoriesScreen';
 
 const Stack = createStackNavigator();
 
@@ -19,23 +21,26 @@ export default function App() {
     <ThemeProvider>
       <FavoritesProvider>
         <TrashProvider>
-          <StatusBar barStyle="dark-content" />
+          <CategoryProvider>
+            <StatusBar barStyle="dark-content" />
             <Stack.Navigator 
               initialRouteName="Main"
+              screenOptions={{
+                headerShown: false
+              }}
             >
-            <Stack.Screen name="Main" component={MainScreen} />
-            <Stack.Screen name="NoteDetails" component={NoteDetailsScreen} />
-            <Stack.Screen name="CreateNote" component={CreateNoteScreen} />
-            <Stack.Screen name="Favorites" component={FavoritesScreen} />  
-            <Stack.Screen name="Search" component={SearchScreen} />
-            <Stack.Screen 
-              name="Trash" 
-              component={TrashScreen}
-              options={{ title: 'Lixeira' }}
-            />
-          </Stack.Navigator>
+              <Stack.Screen name="Main" component={MainScreen} />
+              <Stack.Screen name="NoteDetails" component={NoteDetailsScreen} />
+              <Stack.Screen name="CreateNote" component={CreateNoteScreen} />
+              <Stack.Screen name="Favorites" component={FavoritesScreen} />  
+              <Stack.Screen name="Search" component={SearchScreen} />
+              <Stack.Screen name="Trash" component={TrashScreen} />
+              <Stack.Screen name="Categories" component={CategoriesScreen} />
+            </Stack.Navigator>
+            </CategoryProvider>
         </TrashProvider>
       </FavoritesProvider>
     </ThemeProvider>
   );
+
 }

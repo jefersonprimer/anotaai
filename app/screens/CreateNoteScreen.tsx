@@ -3,6 +3,8 @@ import { View, TextInput, Button, Alert } from 'react-native';
 import { saveNotes, loadNotes } from '../utils/storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
+import { Note } from '../types/Note';
+
 
 // Definindo o tipo dos parâmetros de rota
 interface CreateNoteRouteParams {
@@ -28,13 +30,12 @@ const CreateNote: React.FC<CreateNoteProps> = ({ navigation, route }) => {
       return;
     }
 
-    // Criação de uma nova nota
-    const newNote = {
+    const newNote: Note = {
       id: Date.now().toString(),
       title: title.trim(),
       content: content.trim(),
-      starred: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date(),
+      starred: false
     };
 
     try {
