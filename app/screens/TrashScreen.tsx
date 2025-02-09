@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet } from 'react
 import { useTrash } from '../context/TrashContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
+import HeaderBack from '../components/HeaderBack';
 
 const TrashScreen = () => {
   const { trashedNotes, restoreFromTrash, deletePermantly, emptyTrash } = useTrash();
@@ -77,10 +78,9 @@ const TrashScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#1a1a1a' : '#f5f5f5' }]}>
+      <HeaderBack title="Lixeira" />
+      
       <View style={styles.header}>
-        <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>
-          Lixeira
-        </Text>
         {trashedNotes.length > 0 && (
           <TouchableOpacity onPress={handleEmptyTrash} style={styles.emptyButton}>
             <Text style={[styles.emptyButtonText, { color: isDarkMode ? '#fff' : '#000' }]}>
@@ -119,10 +119,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   emptyButton: {
     padding: 8,

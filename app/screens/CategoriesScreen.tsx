@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,59 @@ import {
 } from 'react-native';
 import { useCategories } from '../context/CategoryContext';
 import { useTheme } from '../context/ThemeContext';
+import HeaderBack from '../components/HeaderBack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const CategoriesScreen = () => {
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  categoryId?: string;
+}
+
+const CategoriesScreen = ({ route, navigation }) => {
   const { categories, addCategory, deleteCategory } = useCategories();
   const { isDarkMode } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Carregar notas
+  useEffect(() => {
+    loadNotes();
+  }, []);
+
+  const loadNotes = async () => {
+    try {
+      const savedNotes = await AsyncStorage.getItem('notes');
+      if (savedNotes) {
+        setNotes(JSON.parse(savedNotes));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar notas:', error);
+    }
+  };
+
+  // Contar notas por categoria
+  const getNotesCount = (categoryId: string) => {
+    return notes.filter(note => note.categoryId === categoryId).length;
+  };
+
+  // Atualizar categoria da nota
+  const updateNoteCategory = async (noteId: string, categoryId: string) => {
+    const updatedNotes = notes.map(note =>
+      note.id === noteId ? { ...note, categoryId } : note
+    );
+    setNotes(updatedNotes);
+    try {
+      await AsyncStorage.setItem('notes', JSON.stringify(updatedNotes));
+      Alert.alert('Sucesso', 'Nota atualizada com sucesso!');
+      loadNotes(); // Recarregar notas
+    } catch (error) {
+      console.error('Erro ao atualizar nota:', error);
+    }
+  };
 
   const handleAddCategory = async () => {
     if (newCategoryName.trim()) {
@@ -43,31 +90,75 @@ const CategoriesScreen = () => {
     );
   };
 
-  const renderItem = ({ item }: { item: any }) => (
-    <View style={[styles.categoryItem, { backgroundColor: isDarkMode ? '#333' : '#fff' }]}>
-      <Text style={[styles.categoryName, { color: isDarkMode ? '#fff' : '#000' }]}>
-        {item.name}
-      </Text>
-      <TouchableOpacity onPress={() => handleDeleteCategory(item.id)}>
-        <Text style={styles.deleteButton}>🗑️</Text>
+  const renderCategory = ({ item: category }) => {
+    const notesCount = getNotesCount(category.id);
+    const isSelected = selectedCategory === category.id;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.categoryItem,
+          { backgroundColor: isDarkMode ? '#333' : '#fff' },
+          isSelected && styles.selectedCategory
+        ]}
+        onPress={() => setSelectedCategory(isSelected ? null : category.id)}
+      >
+        <Text style={[styles.categoryName, { color: isDarkMode ? '#fff' : '#000' }]}>
+          {category.name}
+        </Text>
+        <Text style={[styles.notesCount, { color: isDarkMode ? '#ccc' : '#666' }]}>
+          {notesCount} {notesCount === 1 ? 'nota' : 'notas'}
+        </Text>
       </TouchableOpacity>
-    </View>
-  );
+    );
+  };
+
+  const renderNote = ({ item: note }) => {
+    if (!selectedCategory) return null;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.noteItem,
+          { backgroundColor: isDarkMode ? '#444' : '#f5f5f5' }
+        ]}
+        onPress={() => updateNoteCategory(note.id, selectedCategory)}
+      >
+        <Text style={[styles.noteTitle, { color: isDarkMode ? '#fff' : '#000' }]}>
+          {note.title}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#1a1a1a' : '#f5f5f5' }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>
-          Categorias
-        </Text>
-      </View>
+      <HeaderBack title="Categorias" />
+      
+      <View style={styles.content}>
+        <View style={styles.categoriesList}>
+          <FlatList
+            data={categories}
+            renderItem={renderCategory}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.categoryListContent}
+          />
+        </View>
 
-      <FlatList
-        data={categories}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-      />
+        {selectedCategory && (
+          <View style={styles.notesList}>
+            <Text style={[styles.notesTitle, { color: isDarkMode ? '#fff' : '#000' }]}>
+              Notas Disponíveis
+            </Text>
+            <FlatList
+              data={notes.filter(note => !note.categoryId)}
+              renderItem={renderNote}
+              keyExtractor={item => item.id}
+              contentContainerStyle={styles.notesListContent}
+            />
+          </View>
+        )}
+      </View>
 
       <TouchableOpacity
         style={[styles.addButton, { backgroundColor: isDarkMode ? '#444' : '#ddd' }]}
@@ -122,32 +213,56 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+  content: {
+    flex: 1,
+    flexDirection: 'row',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  categoriesList: {
+    flex: 1,
+    borderRightWidth: 1,
+    borderRightColor: '#e0e0e0',
   },
-  list: {
+  categoryListContent: {
     padding: 16,
   },
   categoryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 16,
     marginBottom: 8,
     borderRadius: 8,
-    elevation: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  selectedCategory: {
+    borderWidth: 2,
+    borderColor: '#007AFF',
   },
   categoryName: {
     fontSize: 16,
+    fontWeight: '500',
   },
-  deleteButton: {
-    fontSize: 20,
+  notesCount: {
+    fontSize: 14,
+  },
+  notesList: {
+    flex: 1,
+    padding: 16,
+  },
+  notesTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 16,
+  },
+  notesListContent: {
+    flexGrow: 1,
+  },
+  noteItem: {
+    padding: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+  },
+  noteTitle: {
+    fontSize: 14,
   },
   addButton: {
     position: 'absolute',

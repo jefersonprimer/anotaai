@@ -297,7 +297,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
         </TouchableOpacity>
 
          {/* Substituindo o botão "Trocar cor letras" pelo ícone de meio círculo */}
-         <TouchableOpacity onPress={() => navigation.navigate('Favorites', { notes: favoriteNotes })}>
+         <TouchableOpacity onPress={(event) => handleOpenColorPalette(event)}>
           <SvgXml xml={halfCircleSvg} width={30} height={30} color={iconColor} />
         </TouchableOpacity>
       </View>
