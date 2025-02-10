@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, StyleSheet } from 'react-native';
 import { Note } from './MainScreen';
 import { loadNotes } from '../utils/storage';
+import HeaderBack from '../components/HeaderBack';
 
 interface SearchScreenProps {
   navigation: any;
@@ -49,6 +50,8 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <HeaderBack title="Procurar" />
+
       <TextInput
         style={styles.searchInput}
         placeholder="Pesquisar notas..."
@@ -100,9 +103,8 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     height: 50,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderWidth: 0,
+    outlineStyle: 'none',
     paddingHorizontal: 16,
     marginBottom: 16,
     fontSize: 16,

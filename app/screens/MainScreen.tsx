@@ -73,7 +73,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
     // Pegar a posição do botão para posicionar a paleta
     const { pageY } = event.nativeEvent;
     setPalettePosition({ 
-      top: pageY + 10, // 10px abaixo do botão
+      top: pageY - 280, // 10px abaixo do botão
       right: 20 
     });
     setShowColorPalette(true);
@@ -152,11 +152,11 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff' }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: isDarkMode ? '#333' : '#fff' }]}>
+      <View style={[styles.header, { backgroundColor: isDarkMode ? '#1a1a1a' : '#fff' }]}>
         {/* Botão de alternar layout */}
         <TouchableOpacity onPress={toggleLayout} style={styles.headerButton}>
           <Text style={[styles.headerButtonText, { color: isDarkMode ? '#fff' : '#000' }]}>
-            {isGridLayout ? '📝' : '⊞'}
+            {isGridLayout ? '☰' : '⊞'}
           </Text>
         </TouchableOpacity>
 
@@ -171,7 +171,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
           style={styles.headerButton}
         >
           <Text style={[styles.headerButtonText, { color: isDarkMode ? '#fff' : '#000' }]}>
-            ⚙️
+          ⠂⠂
           </Text>
         </TouchableOpacity>
       </View>
@@ -315,13 +315,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   headerButton: {
     padding: 8,

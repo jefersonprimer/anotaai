@@ -4,6 +4,7 @@ import { saveNotes, loadNotes } from '../utils/storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { Note } from '../types/Note';
+import HeaderBack from '../components/HeaderBack';
 
 
 // Definindo o tipo dos parâmetros de rota
@@ -61,15 +62,23 @@ const CreateNote: React.FC<CreateNoteProps> = ({ navigation, route }) => {
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
-      <TextInput
-        placeholder="Título"
-        value={title}
-        onChangeText={setTitle}
-        style={{ fontSize: 24, borderBottomWidth: 1, marginBottom: 15, padding: 5 }}
-      />
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <HeaderBack />
+        <TextInput
+          placeholder="Título"
+          value={title}
+          onChangeText={setTitle}
+          style={{
+            fontSize: 24,
+            flex: 1, // Faz o TextInput ocupar o espaço restante
+            borderWidth: 0, // Remove qualquer borda padrão
+            outlineStyle: 'none' // No React Native, geralmente não é necessário, mas pode ajudar no React Native Web
+          }}
+        />
 
+      </View>
       <TextInput
-        placeholder="Conteúdo"
+        placeholder="Notas"
         value={content}
         onChangeText={setContent}
         multiline
@@ -78,8 +87,8 @@ const CreateNote: React.FC<CreateNoteProps> = ({ navigation, route }) => {
           flex: 1,
           textAlignVertical: 'top',
           padding: 10,
-          borderWidth: 1,
-          borderRadius: 5
+          borderWidth: 0, // Remove qualquer borda padrão
+          outlineStyle: 'none'
         }}
       />
 

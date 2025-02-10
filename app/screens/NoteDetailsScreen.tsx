@@ -92,7 +92,7 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
           style={styles.headerButton}
         >
           <View>
-            ←
+            {'‹'}
           </View>
         </TouchableOpacity>
 
@@ -111,7 +111,7 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
             style={styles.headerButton}
           >
              <View>
-              ⚙️
+             ⋮
               </View>
           </TouchableOpacity>
         </View>
@@ -153,7 +153,9 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
             styles.titleInput,
             { 
               color: isDarkMode ? '#fff' : '#000',
-              borderBottomColor: isDarkMode ? '#444' : '#ddd'
+              borderBottomColor: isDarkMode ? '#444' : '#ddd',
+              borderWidth: 0, // Remove qualquer borda padrão
+              outlineStyle: 'none'
             }
           ]}
           placeholderTextColor={isDarkMode ? '#888' : '#666'}
@@ -168,7 +170,9 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
             styles.contentInput,
             { 
               color: isDarkMode ? '#fff' : '#000',
-              borderColor: isDarkMode ? '#444' : '#ddd'
+              borderColor: isDarkMode ? '#444' : '#ddd',
+              borderWidth: 0, // Remove qualquer borda padrão
+              outlineStyle: 'none'
             }
           ]}
           placeholderTextColor={isDarkMode ? '#888' : '#666'}

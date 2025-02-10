@@ -37,6 +37,15 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onPress }) => {
       ]}
     >
       <View style={styles.header}>
+      <TouchableOpacity 
+          onPress={() => isFavorite(note.id) ? removeFavorite(note.id) : addFavorite(note.id)}
+        >
+          <Icon
+            name={isFavorite(note.id) ? 'star' : 'star-border'}
+            size={24}
+            color={isFavorite(note.id) ? 'gold' : '#666'}
+          />
+        </TouchableOpacity>
         <Text 
           style={[
             styles.title,
@@ -46,17 +55,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onPress }) => {
         >
           {note.title}
         </Text>
-        <TouchableOpacity 
-          onPress={() => isFavorite(note.id) ? removeFavorite(note.id) : addFavorite(note.id)}
-        >
-          <Icon
-            name={isFavorite(note.id) ? 'star' : 'star-border'}
-            size={24}
-            color={isFavorite(note.id) ? 'gold' : '#666'}
-          />
-        </TouchableOpacity>
-      </View>
-
+        
       {categoryName && (
         <View style={styles.categoryContainer}>
           <Text style={[
@@ -67,16 +66,10 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onPress }) => {
           </Text>
         </View>
       )}
+      </View>
 
-      <Text 
-        style={[
-          styles.content,
-          { color: isDarkMode ? '#ccc' : '#666' }
-        ]} 
-        numberOfLines={2}
-      >
-        {note.content}
-      </Text>
+
+      
     </TouchableOpacity>
   );
 };
