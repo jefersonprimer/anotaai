@@ -5,4 +5,5 @@ export interface Note {
   starred?: boolean;
   createdAt: Date;
   categoryId?: string;
+  deletedAt?: string;
 }

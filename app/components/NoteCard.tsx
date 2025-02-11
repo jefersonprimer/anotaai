@@ -1,75 +1,69 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useFavorites } from '../context/FavoriteContext';
-import { useCategories } from '../context/CategoryContext';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useIconColor } from '../context/IconColorContext';
+import { useCategories } from '../context/CategoryContext';
 
 interface NoteCardProps {
   note: {
     id: string;
     title: string;
     content: string;
+    starred: boolean;
     categoryId?: string;
+    createdAt: string;
   };
   onPress: () => void;
+  onFavoriteToggle: () => void;
+  onLongPress?: () => void;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, onPress }) => {
-  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
-  const { categories } = useCategories();
+const NoteCard: React.FC<NoteCardProps> = ({ note, onPress, onFavoriteToggle, onLongPress }) => {
   const { isDarkMode } = useTheme();
+  const { iconColor } = useIconColor();
+  const { categories } = useCategories();
 
-  const getCategoryName = () => {
-    if (!note.categoryId) return null;
-    const category = categories.find(cat => cat.id === note.categoryId);
-    return category?.name;
-  };
-
-  const categoryName = getCategoryName();
+  const category = categories.find(cat => cat.id === note.categoryId);
 
   return (
-    <TouchableOpacity 
-      onPress={onPress} 
+    <TouchableOpacity
       style={[
         styles.card,
         { backgroundColor: isDarkMode ? '#333' : '#fff' }
       ]}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={500}
     >
-      <View style={styles.header}>
-      <TouchableOpacity 
-          onPress={() => isFavorite(note.id) ? removeFavorite(note.id) : addFavorite(note.id)}
+      <View style={styles.cardHeader}>
+        <TouchableOpacity 
+          onPress={onFavoriteToggle}
+          style={styles.starButton}
         >
-          <Icon
-            name={isFavorite(note.id) ? 'star' : 'star-border'}
+          <MaterialIcons
+            name={note.starred ? "star" : "star-outline"}
             size={24}
-            color={isFavorite(note.id) ? 'gold' : '#666'}
+            color={iconColor}
           />
         </TouchableOpacity>
+        
         <Text 
-          style={[
-            styles.title,
-            { color: isDarkMode ? '#fff' : '#000' }
-          ]} 
+          style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}
           numberOfLines={1}
         >
-          {note.title}
+          {note.title || 'Sem título'}
         </Text>
-        
-      {categoryName && (
-        <View style={styles.categoryContainer}>
-          <Text style={[
-            styles.categoryText,
-            { color: isDarkMode ? '#ccc' : '#666' }
-          ]}>
-            {categoryName}
+
+        {category && (
+          <Text 
+            style={[styles.category, { color: isDarkMode ? '#ccc' : '#666' }]}
+            numberOfLines={1}
+          >
+            {category.name}
           </Text>
-        </View>
-      )}
+        )}
       </View>
-
-
-      
     </TouchableOpacity>
   );
 };
@@ -79,34 +73,29 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 8,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  header: {
+  cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+  },
+  starButton: {
+    marginRight: 8,
   },
   title: {
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
-    marginRight: 8,
   },
-  categoryContainer: {
-    marginBottom: 8,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  content: {
+  category: {
     fontSize: 14,
+    fontStyle: 'italic',
+    marginLeft: 8,
   },
 });
 

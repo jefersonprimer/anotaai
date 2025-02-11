@@ -8,7 +8,15 @@ import { useTheme } from '../context/ThemeContext';
 
 // Definir a tipagem para os parâmetros da rota
 interface FavoritesScreenRouteParams {
-  notes: { id: string; title: string; content: string; starred: boolean }[]; // Defina o tipo das notas
+  notes: Array<{
+    id: string;
+    title: string;
+    content: string;
+    starred: boolean;
+    categoryId?: string;
+    createdAt: string;
+    items?: { id: string; text: string; isChecked: boolean }[];
+  }>;
 }
 
 interface FavoritesScreenProps {
@@ -20,6 +28,33 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ route, navigation }) 
   const { notes } = route.params; // Acessa as notas passadas na rota
   const { isDarkMode } = useTheme();
 
+  const renderItem = ({ item }) => {
+    const isChecklist = 'items' in item;
+    
+    return (
+      <NoteCard
+        note={{
+          id: item.id,
+          title: item.title,
+          content: isChecklist 
+            ? `${item.items.length} itens • ${item.items.filter(i => i.isChecked).length} concluídos`
+            : item.content,
+          starred: item.starred,
+          categoryId: item.categoryId,
+          createdAt: item.createdAt
+        }}
+        onPress={() => {
+          if (isChecklist) {
+            navigation.navigate('Checklist', { checklist: item });
+          } else {
+            navigation.navigate('NoteDetails', { note: item });
+          }
+        }}
+        onFavoriteToggle={() => {}} // Desativado na tela de favoritos
+      />
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#1a1a1a' : '#f5f5f5' }]}>
       <HeaderBack title="Favoritos" />
@@ -27,13 +62,7 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ route, navigation }) 
       <View style={{ flex: 1, padding: 10 }}>
         <FlatList
           data={notes}
-          renderItem={({ item }) => (
-            <NoteCard 
-              note={item} 
-              onPress={() => navigation.navigate('NoteDetails', { note: item })}
-              onFavoriteToggle={() => {}}  // A tela de favoritos não precisa alterar o estado de favorito
-            />
-          )}
+          renderItem={renderItem}
           keyExtractor={item => item.id}
           numColumns={2}
         />

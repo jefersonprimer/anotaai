@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert } from 'react-native';
+import { View, TextInput, Button, Alert, TouchableOpacity, Text } from 'react-native';
 import { saveNotes, loadNotes } from '../utils/storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { Note } from '../types/Note';
 import HeaderBack from '../components/HeaderBack';
+import { useTheme } from '../context/ThemeContext';
+import { useIconColor } from '../context/IconColorContext';
 
 
 // Definindo o tipo dos parâmetros de rota
@@ -21,6 +23,8 @@ interface CreateNoteProps {
 const CreateNote: React.FC<CreateNoteProps> = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const { isDarkMode } = useTheme();
+  const { iconColor } = useIconColor();
   
   // Aqui já podemos acessar corretamente o onNoteCreated, pois foi tipado
   const { onNoteCreated } = route.params;
@@ -62,21 +66,23 @@ const CreateNote: React.FC<CreateNoteProps> = ({ navigation, route }) => {
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
+      <HeaderBack title="Criar Nota"/>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <HeaderBack />
         <TextInput
           placeholder="Título"
           value={title}
           onChangeText={setTitle}
           style={{
             fontSize: 24,
-            flex: 1, // Faz o TextInput ocupar o espaço restante
-            borderWidth: 0, // Remove qualquer borda padrão
-            outlineStyle: 'none' // No React Native, geralmente não é necessário, mas pode ajudar no React Native Web
+            flex: 1,
+            borderWidth: 0,
+            outlineStyle: 'none',
+            color: iconColor
           }}
+          placeholderTextColor={isDarkMode ? '#666' : '#999'}
         />
-
       </View>
+      
       <TextInput
         placeholder="Notas"
         value={content}
@@ -87,12 +93,33 @@ const CreateNote: React.FC<CreateNoteProps> = ({ navigation, route }) => {
           flex: 1,
           textAlignVertical: 'top',
           padding: 10,
-          borderWidth: 0, // Remove qualquer borda padrão
-          outlineStyle: 'none'
+          borderWidth: 0,
+          outlineStyle: 'none',
+          color: iconColor
         }}
+        placeholderTextColor={isDarkMode ? '#666' : '#999'}
       />
 
-      <Button title="Criar Nota" onPress={handleCreate} />
+      <TouchableOpacity
+        onPress={handleCreate}
+        style={{
+          backgroundColor: isDarkMode ? '#333' : '#fff',
+          padding: 15,
+          borderRadius: 8,
+          alignItems: 'center',
+          marginTop: 10,
+          borderWidth: 1,
+          borderColor: iconColor
+        }}
+      >
+        <Text style={{
+          color: iconColor,
+          fontSize: 16,
+          fontWeight: '500'
+        }}>
+          Criar Nota
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };

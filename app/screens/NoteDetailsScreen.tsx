@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, Alert, StyleSheet, Text } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { useFavorites } from '../context/FavoriteContext';
 import { useCategories } from '../context/CategoryContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIconColor } from '../context/IconColorContext';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 
 // Definir os tipos de dados para o parâmetro da rota
 interface Note {
@@ -15,26 +18,45 @@ interface Note {
   createdAt: Date;
 }
 
-interface NoteDetailsRouteParams {
+interface RouteParams {
   note: Note;
-  updateNote: (id: string, title: string, content: string) => void;
-  deleteNote: (id: string) => void;
-  onNoteDeleted: () => void;
 }
 
 interface NoteDetailsScreenProps {
   navigation: StackNavigationProp<any>; // Tipagem para a navegação
-  route: RouteProp<{ params: NoteDetailsRouteParams }, 'params'>; // Tipagem para a rota
+  route: RouteProp<{ params: RouteParams }, 'params'>; // Tipagem para a rota
 }
 
 const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation }) => {
-  const { note, updateNote, deleteNote, onNoteDeleted } = route.params;
+  const { note: initialNote } = route.params as RouteParams;
+  const [note, setNote] = useState(initialNote);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [showDeleteOption, setShowDeleteOption] = useState(false);
   const { isDarkMode } = useTheme();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
   const { categories } = useCategories();
+  const { iconColor } = useIconColor();
+
+  // Adicione este useEffect para atualizar a nota quando retornar da tela de categorias
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      try {
+        const savedNotes = await AsyncStorage.getItem('notes');
+        if (savedNotes) {
+          const notesArray = JSON.parse(savedNotes);
+          const updatedNote = notesArray.find((n: Note) => n.id === note.id);
+          if (updatedNote) {
+            setNote(updatedNote);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar nota:', error);
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const getCategoryName = () => {
     if (!note.categoryId) return 'Categorias';
@@ -47,23 +69,57 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
       Alert.alert('Erro', 'Preencha todos os campos!');
       return;
     }
-    updateNote(note.id, title.trim(), content.trim());
+    // Assuming updateNote is called elsewhere in the component
     navigation.goBack();
+  };
+
+  const deleteNote = async (noteId: string) => {
+    try {
+      // Primeiro, vamos pegar a nota atual e todas as notas
+      const savedNotes = await AsyncStorage.getItem('notes');
+      const savedTrash = await AsyncStorage.getItem('trash');
+      
+      if (savedNotes) {
+        const notesArray = JSON.parse(savedNotes);
+        const noteToDelete = notesArray.find((n: Note) => n.id === noteId);
+        
+        // Remove a nota da lista principal
+        const updatedNotes = notesArray.filter((n: Note) => n.id !== noteId);
+        await AsyncStorage.setItem('notes', JSON.stringify(updatedNotes));
+
+        // Adiciona a nota à lixeira
+        const trashNotes = savedTrash ? JSON.parse(savedTrash) : [];
+        const noteWithDeletedDate = {
+          ...noteToDelete,
+          deletedAt: new Date().toISOString()
+        };
+        trashNotes.push(noteWithDeletedDate);
+        await AsyncStorage.setItem('trash', JSON.stringify(trashNotes));
+
+        // Remove dos favoritos se estiver marcada
+        if (isFavorite(noteId)) {
+          await removeFavorite(noteId);
+        }
+
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Erro ao excluir nota:', error);
+      Alert.alert('Erro', 'Não foi possível excluir a nota');
+    }
   };
 
   const confirmDelete = () => {
     Alert.alert(
       'Confirmar Exclusão',
-      'Tem certeza que deseja excluir esta nota permanentemente?',
+      'Tem certeza que deseja mover esta nota para a lixeira?',
       [
         { text: 'Cancelar', style: 'cancel' },
         { 
           text: 'Excluir', 
+          style: 'destructive',
           onPress: () => {
-            console.log('Deletando nota com id:', note.id); // Log para depuração
-            deleteNote(note.id); // Chama a função de exclusão corretamente
-            onNoteDeleted(); // Função para atualizar a lista de notas na tela principal
-            navigation.goBack(); // Vai de volta para a tela anterior após a exclusão
+            deleteNote(note.id);
           }
         }
       ]
@@ -72,10 +128,32 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
 
   const toggleStar = async () => {
     try {
-      if (isFavorite(note.id)) {
-        await removeFavorite(note.id);
-      } else {
-        await addFavorite(note.id);
+      const savedNotes = await AsyncStorage.getItem('notes');
+      if (savedNotes) {
+        const notesArray = JSON.parse(savedNotes);
+        const updatedNotes = notesArray.map((n: Note) => {
+          if (n.id === note.id) {
+            return { ...n, starred: !n.starred };
+          }
+          return n;
+        });
+        
+        await AsyncStorage.setItem('notes', JSON.stringify(updatedNotes));
+        
+        // Atualiza o estado local
+        setNote({ ...note, starred: !note.starred });
+        
+        // Atualiza os favoritos
+        if (!note.starred) {
+          await addFavorite(note.id);
+        } else {
+          await removeFavorite(note.id);
+        }
+
+        // Notifica a MainScreen para atualizar
+        if (route.params?.onNoteUpdated) {
+          route.params.onNoteUpdated();
+        }
       }
     } catch (error) {
       console.error('Erro ao atualizar favorito:', error);
@@ -91,9 +169,11 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
           onPress={() => navigation.goBack()}
           style={styles.headerButton}
         >
-          <View>
-            {'‹'}
-          </View>
+          <Feather 
+            name="arrow-left" 
+            size={24} 
+            color={iconColor}
+          />
         </TouchableOpacity>
 
         <View style={styles.headerRightButtons}>
@@ -101,18 +181,22 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
             onPress={toggleStar}
             style={styles.headerButton}
           >
-             <View>
-              {isFavorite(note.id) ? '⭐' : '☆'}
-             </View>
+            <MaterialIcons 
+              name={isFavorite(note.id) ? "star" : "star-outline"} 
+              size={24} 
+              color={iconColor}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity 
             onPress={() => setShowDeleteOption(!showDeleteOption)}
             style={styles.headerButton}
           >
-             <View>
-             ⋮
-              </View>
+            <Feather 
+              name="trash-2" 
+              size={24} 
+              color={iconColor}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -123,7 +207,7 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
         borderBottomColor: isDarkMode ? '#333' : '#e0e0e0' 
       }]}>
         <TouchableOpacity 
-          onPress={() => navigation.navigate('Categories')}
+          onPress={() => navigation.navigate('Categories', { note: note })}
           style={styles.categoryButton}
         >
           <Text style={[styles.categoryText, { 
@@ -185,9 +269,9 @@ const NoteDetailsScreen: React.FC<NoteDetailsScreenProps> = ({ route, navigation
           style={[styles.deleteButton, { backgroundColor: isDarkMode ? '#333' : '#fff' }]}
           onPress={confirmDelete}
         >
-           <View>
+          <Text style={[styles.deleteText, { color: isDarkMode ? '#fff' : '#000' }]}>
             🗑️ Excluir Nota
-           </View>
+          </Text>
         </TouchableOpacity>
       )}
     </View>

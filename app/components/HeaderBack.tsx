@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
+import { useIconColor } from '../context/IconColorContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface HeaderBackProps {
@@ -11,11 +12,12 @@ interface HeaderBackProps {
 const HeaderBack: React.FC<HeaderBackProps> = ({ title }) => {
   const navigation = useNavigation();
   const { isDarkMode } = useTheme();
+  const { iconColor } = useIconColor();
 
   return (
     <View style={[
       styles.header,
-      { backgroundColor: isDarkMode ? '#333' : '#fff' }
+      { backgroundColor: isDarkMode ? '#1a1a1a' : '#f5f5f5' }
     ]}>
       <TouchableOpacity
         onPress={() => navigation.goBack()}
@@ -24,13 +26,13 @@ const HeaderBack: React.FC<HeaderBackProps> = ({ title }) => {
         <Icon 
           name="arrow-back" 
           size={24} 
-          color={isDarkMode ? '#fff' : '#000'}
+          color={iconColor}
         />
       </TouchableOpacity>
       {title && (
         <Text style={[
           styles.title,
-          { color: isDarkMode ? '#fff' : '#000' }
+          { color: iconColor }
         ]}>
           {title}
         </Text>
@@ -45,8 +47,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   backButton: {
     padding: 8,

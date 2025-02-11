@@ -12,31 +12,28 @@ type CategoryContextType = {
   addCategory: (name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   updateCategory: (id: string, name: string) => Promise<void>;
+  loadCategories: () => Promise<void>;
 };
 
 const CategoryContext = createContext<CategoryContextType | undefined>(undefined);
 
-export function CategoryProvider({ children }: { children: React.ReactNode }) {
+export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
 
   const loadCategories = async () => {
     try {
-      const saved = await AsyncStorage.getItem('categories');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setCategories(parsed.map((cat: any) => ({
-          ...cat,
-          createdAt: new Date(cat.createdAt)
-        })));
+      const savedCategories = await AsyncStorage.getItem('categories');
+      if (savedCategories) {
+        setCategories(JSON.parse(savedCategories));
       }
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
     }
   };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   const saveCategories = async (newCategories: Category[]) => {
     try {
@@ -76,12 +73,13 @@ export function CategoryProvider({ children }: { children: React.ReactNode }) {
       categories,
       addCategory,
       deleteCategory,
-      updateCategory
+      updateCategory,
+      loadCategories
     }}>
       {children}
     </CategoryContext.Provider>
   );
-}
+};
 
 export function useCategories() {
   const context = useContext(CategoryContext);
